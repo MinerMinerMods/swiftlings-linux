@@ -1,9 +1,10 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ExerciseMetadataTests: XCTestCase {
-  func testExerciseMetadataInitialization() {
+@available(macOS,10_15)
+@Suite struct ExerciseMetadataTests {
+  @Test func ExerciseMetadataInitialization() {
     let exercises = [
       Exercise(name: "intro1", dir: "00_basics", hint: "Intro hint", dependencies: nil),
       Exercise(name: "variables1", dir: "01_variables", hint: "Variables hint", dependencies: ["Foundation"]),
@@ -16,15 +17,15 @@ final class ExerciseMetadataTests: XCTestCase {
       exercises: exercises
     )
 
-    XCTAssertTrue(metadata.formatVersion == 1)
-    XCTAssertTrue(metadata.welcomeMessage == "Welcome to Swiftlings!")
-    XCTAssertTrue(metadata.finalMessage == "Congratulations!")
-    XCTAssertTrue(metadata.exercises.count == 2)
-    XCTAssertTrue(metadata.exercises[0].name == "intro1")
-    XCTAssertTrue(metadata.exercises[1].name == "variables1")
+    #assert(metadata.formatVersion == 1)
+    #assert(metadata.welcomeMessage == "Welcome to Swiftlings!")
+    #assert(metadata.finalMessage == "Congratulations!")
+    #assert(metadata.exercises.count == 2)
+    #assert(metadata.exercises[0].name == "intro1")
+    #assert(metadata.exercises[1].name == "variables1")
   }
 
-  func testExerciseMetadataCodable() throws {
+  @Test func ExerciseMetadataCodable() throws {
     let exercises = [
       Exercise(name: "test1", dir: "test", hint: "Hint 1", dependencies: nil),
       Exercise(name: "test2", dir: "test", hint: "Hint 2", dependencies: ["Foundation", "UIKit"]),
@@ -44,40 +45,40 @@ final class ExerciseMetadataTests: XCTestCase {
     let decoder = JSONDecoder()
     let decoded = try decoder.decode(ExerciseMetadata.self, from: data)
 
-    XCTAssertTrue(decoded.formatVersion == original.formatVersion)
-    XCTAssertTrue(decoded.welcomeMessage == original.welcomeMessage)
-    XCTAssertTrue(decoded.finalMessage == original.finalMessage)
-    XCTAssertTrue(decoded.exercises.count == original.exercises.count)
-    XCTAssertTrue(decoded.exercises == original.exercises)
+    #assert(decoded.formatVersion == original.formatVersion)
+    #assert(decoded.welcomeMessage == original.welcomeMessage)
+    #assert(decoded.finalMessage == original.finalMessage)
+    #assert(decoded.exercises.count == original.exercises.count)
+    #assert(decoded.exercises == original.exercises)
   }
 
-  func testJSONKeyMapping() throws {
+  @Test func JSONKeyMapping() throws {
     let jsonString = """
-      {
-        "format_version": 3,
-        "welcome_message": "Test welcome",
-        "final_message": "Test final",
-        "exercises": [
-          {
-            "name": "exercise1",
-            "dir": "dir1",
-            "hint": "hint1"
-          }
-        ]
-      }
-      """
+                     {
+                       "format_version": 3,
+                       "welcome_message": "Test welcome",
+                       "final_message": "Test final",
+                       "exercises": [
+                         {
+                           "name": "exercise1",
+                           "dir": "dir1",
+                           "hint": "hint1"
+                         }
+                       ]
+                     }
+                     """
 
-    let data = jsonString.data(using: .utf8)!
+    let data = jsonString.data(using: .utf8) !
     let decoder = JSONDecoder()
     let metadata = try decoder.decode(ExerciseMetadata.self, from: data)
 
-    XCTAssertTrue(metadata.formatVersion == 3)
-    XCTAssertTrue(metadata.welcomeMessage == "Test welcome")
-    XCTAssertTrue(metadata.finalMessage == "Test final")
-    XCTAssertTrue(metadata.exercises.count == 1)
+    #assert(metadata.formatVersion == 3)
+    #assert(metadata.welcomeMessage == "Test welcome")
+    #assert(metadata.finalMessage == "Test final")
+    #assert(metadata.exercises.count == 1)
   }
 
-  func testLoadFromFile() throws {
+  @Test func LoadFromFile() throws {
 
     let tempDir = FileManager.default.temporaryDirectory
     let tempFile = tempDir.appendingPathComponent("test_info.json")
@@ -97,24 +98,26 @@ final class ExerciseMetadataTests: XCTestCase {
     try data.write(to: tempFile)
 
     defer {
-      try? FileManager.default.removeItem(at: tempFile)
+      try ? FileManager.default.removeItem(at: tempFile)
     }
 
 
     let loaded = try ExerciseMetadata.load(from: tempFile.path)
 
-    XCTAssertTrue(loaded.formatVersion == 1)
-    XCTAssertTrue(loaded.welcomeMessage == "Welcome from file")
-    XCTAssertTrue(loaded.finalMessage == "Final from file")
-    XCTAssertTrue(loaded.exercises.count == 1)
-    XCTAssertTrue(loaded.exercises[0].name == "file_test")
+    #assert(loaded.formatVersion == 1)
+    #assert(loaded.welcomeMessage == "Welcome from file")
+    #assert(loaded.finalMessage == "Final from file")
+    #assert(loaded.exercises.count == 1)
+    #assert(loaded.exercises[0].name == "file_test")
   }
 
-  func testLoadFromMissingFile() {
-    XCTAssertThrowsError(try ExerciseMetadata.load(from: "/nonexistent/path/info.json"))
+  @Test func LoadFromMissingFile() {
+    #assert(throws: (any Error).self, "Expected an error when loading from a nonexistent file path") {
+      _ = try ExerciseMetadata.load(from: "/nonexistent/path/info.json")
+    }
   }
 
-  func testEmptyExercises() throws {
+  @Test func EmptyExercises() throws {
     let metadata = ExerciseMetadata(
       formatVersion: 1,
       welcomeMessage: "Welcome",
@@ -122,7 +125,7 @@ final class ExerciseMetadataTests: XCTestCase {
       exercises: []
     )
 
-    XCTAssertTrue(metadata.exercises.isEmpty)
+    #assert(metadata.exercises.isEmpty)
 
 
     let encoder = JSONEncoder()
@@ -131,22 +134,24 @@ final class ExerciseMetadataTests: XCTestCase {
     let decoder = JSONDecoder()
     let decoded = try decoder.decode(ExerciseMetadata.self, from: data)
 
-    XCTAssertTrue(decoded.exercises.isEmpty)
+    #assert(decoded.exercises.isEmpty)
   }
 
-  func testMalformedJSON() {
+  @Test func MalformedJSON() {
     let malformedJSON = """
-      {
-        "format_version": "not a number",
-        "welcome_message": "Test",
-        "final_message": "Test",
-        "exercises": []
-      }
-      """
+                        {
+                          "format_version": "not a number",
+                          "welcome_message": "Test",
+                          "final_message": "Test",
+                          "exercises": []
+                        }
+                        """
 
-    let data = malformedJSON.data(using: .utf8)!
+    let data = malformedJSON.data(using: .utf8) !
     let decoder = JSONDecoder()
 
-    XCTAssertThrowsError(try decoder.decode(ExerciseMetadata.self, from: data))
+    #assert(throws: (any Error).self, "Expected an error when decoding malformed JSON") {
+      _ = try decoder.decode(ExerciseMetadata.self, from: data)
+    }
   }
 }

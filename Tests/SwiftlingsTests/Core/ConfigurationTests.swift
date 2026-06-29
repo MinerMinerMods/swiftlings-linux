@@ -1,68 +1,81 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ConfigurationTests: XCTestCase {
-  func testExecutablePaths() {
+@available(macOS,10_15)
+extension Tag {
+  @Tag static var configuration: Self
+}
+
+@available(macOS,10_15)
+@Suite("Configuration Tests")
+struct ConfigurationTests {
+  @Test
+  func ExecutablePaths() {
     // Resolved from PATH, so the directory varies by toolchain. Check that we
     // got an absolute path to the right tool rather than a fixed location.
-    XCTAssertTrue(Configuration.Executables.git.hasPrefix("/"))
-    XCTAssertTrue(Configuration.Executables.git.hasSuffix("git"))
-    XCTAssertTrue(Configuration.Executables.swiftc.hasPrefix("/"))
-    XCTAssertTrue(Configuration.Executables.swiftc.hasSuffix("swiftc"))
+    #assert(Configuration.Executables.git.hasPrefix("/"))
+    #assert(Configuration.Executables.git.hasSuffix("git"))
+    #assert(Configuration.Executables.swiftc.hasPrefix("/"))
+    #assert(Configuration.Executables.swiftc.hasSuffix("swiftc"))
   }
 
-  func testFilePaths() {
-    XCTAssertTrue(Configuration.Paths.stateFileName == ".swiftlings-state.json")
-    XCTAssertTrue(Configuration.Paths.exerciseInfoFile == "exercises/info.json")
-    XCTAssertTrue(Configuration.Paths.assertSourcePath == "Sources/Swiftlings/Core/Assert.swift")
+  @Test
+  func FilePaths() {
+    #assert(Configuration.Paths.stateFileName == ".swiftlings-state.json")
+    #assert(Configuration.Paths.exerciseInfoFile == "exercises/info.json")
+    #assert(Configuration.Paths.assertSourcePath == "Sources/Swiftlings/Core/Assert.swift")
   }
 
-  func testUIConfiguration() {
-    XCTAssertTrue(Configuration.UI.progressBarWidth == 120)
-    XCTAssertTrue(Configuration.UI.defaultTerminalWidth == 80)
+  @Test
+  func UIConfiguration() {
+    #assert(Configuration.UI.progressBarWidth == 120)
+    #assert(Configuration.UI.defaultTerminalWidth == 80)
   }
 
-  func testExerciseConfiguration() {
-    XCTAssertTrue(Configuration.Exercise.tempDirectoryPrefix == "swiftlings")
-    XCTAssertTrue(Configuration.Exercise.compiledExecutableName == "exercise")
-    XCTAssertTrue(Configuration.Exercise.mainFileName == "main.swift")
+  @Test
+  func ExerciseConfiguration() {
+    #assert(Configuration.Exercise.tempDirectoryPrefix == "swiftlings")
+    #assert(Configuration.Exercise.compiledExecutableName == "exercise")
+    #assert(Configuration.Exercise.mainFileName == "main.swift")
   }
 
-  func testConfigurationValuesAreReasonable() {
+  @Test
+  func ConfigurationValuesAreReasonable() {
 
-    XCTAssertTrue(Configuration.Executables.git.hasPrefix("/"))
-    XCTAssertTrue(Configuration.Executables.swiftc.hasPrefix("/"))
-
-
-    XCTAssertTrue(Configuration.UI.progressBarWidth > 0)
-    XCTAssertTrue(Configuration.UI.defaultTerminalWidth > 0)
+    #assert(Configuration.Executables.git.hasPrefix("/"))
+    #assert(Configuration.Executables.swiftc.hasPrefix("/"))
 
 
-    XCTAssertTrue(!Configuration.Paths.stateFileName.isEmpty)
-    XCTAssertTrue(!Configuration.Paths.exerciseInfoFile.isEmpty)
-    XCTAssertTrue(!Configuration.Paths.assertSourcePath.isEmpty)
+    #assert(Configuration.UI.progressBarWidth > 0)
+    #assert(Configuration.UI.defaultTerminalWidth > 0)
 
 
-    XCTAssertTrue(!Configuration.Exercise.tempDirectoryPrefix.isEmpty)
-    XCTAssertTrue(!Configuration.Exercise.compiledExecutableName.isEmpty)
-    XCTAssertTrue(!Configuration.Exercise.mainFileName.isEmpty)
+    #assert(!Configuration.Paths.stateFileName.isEmpty)
+    #assert(!Configuration.Paths.exerciseInfoFile.isEmpty)
+    #assert(!Configuration.Paths.assertSourcePath.isEmpty)
 
 
-    XCTAssertTrue(Configuration.Paths.stateFileName.hasPrefix("."))
+    #assert(!Configuration.Exercise.tempDirectoryPrefix.isEmpty)
+    #assert(!Configuration.Exercise.compiledExecutableName.isEmpty)
+    #assert(!Configuration.Exercise.mainFileName.isEmpty)
 
 
-    XCTAssertTrue(Configuration.Exercise.mainFileName.hasSuffix(".swift"))
+    #assert(Configuration.Paths.stateFileName.hasPrefix("."))
+
+
+    #assert(Configuration.Exercise.mainFileName.hasSuffix(".swift"))
   }
 
-  func testPathConsistency() {
+  @Test
+  func PathConsistency() {
 
-    XCTAssertTrue(Configuration.Paths.assertSourcePath.hasSuffix("Assert.swift"))
-
-
-    XCTAssertTrue(Configuration.Paths.exerciseInfoFile.hasPrefix("exercises/"))
+    #assert(Configuration.Paths.assertSourcePath.hasSuffix("Assert.swift"))
 
 
-    XCTAssertTrue(Configuration.Paths.exerciseInfoFile.hasSuffix(".json"))
+    #assert(Configuration.Paths.exerciseInfoFile.hasPrefix("exercises/"))
+
+
+    #assert(Configuration.Paths.exerciseInfoFile.hasSuffix(".json"))
   }
 }

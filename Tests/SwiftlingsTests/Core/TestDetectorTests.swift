@@ -1,8 +1,9 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class TestDetectorTests: XCTestCase {
+@available(macOS,10_15)
+@Suite struct TestDetectorTests {
 
   class MockFileManager: FileManager {
     var fileExistsResponses: [String: Bool] = [:]
@@ -26,13 +27,13 @@ final class TestDetectorTests: XCTestCase {
     try test(tempFile)
   }
 
-  func testDetectsRunTests() throws {
+  @Test func DetectsRunTests() throws {
     let detector = TestDetector()
 
     let content = """
-      import Foundation
+      import CoreFoundation // Limited
 
-      func testAddition() {
+      @Test func Addition() {
         assertEqual(2 + 2, 4)
       }
 
@@ -40,11 +41,11 @@ final class TestDetectorTests: XCTestCase {
       """
 
     try withTemporaryFile(content: content) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == true)
+      #assert(detector.usesTestApproach(exercisePath: file) == true)
     }
   }
 
-  func testDetectsSwiftlingsAssert() throws {
+  @Test func DetectsSwiftlingsAssert() throws {
     let detector = TestDetector()
 
     let content = """
@@ -56,45 +57,45 @@ final class TestDetectorTests: XCTestCase {
       """
 
     try withTemporaryFile(content: content) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == true)
+      #assert(detector.usesTestApproach(exercisePath: file) == true)
     }
   }
 
-  func testDetectsAssertEqual() throws {
+  @Test func DetectsAssertEqual() throws {
     let detector = TestDetector()
 
     let content = """
-      func testMath() {
+      @Test func Math() {
         assertEqual(10 / 2, 5)
         assertEqual("Hello", "Hello")
       }
       """
 
     try withTemporaryFile(content: content) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == true)
+      #assert(detector.usesTestApproach(exercisePath: file) == true)
     }
   }
 
-  func testDetectsAssertTrue() throws {
+  @Test func DetectsAssertTrue() throws {
     let detector = TestDetector()
 
     let content = """
-      func testConditions() {
+      @Test func Conditions() {
         assertTrue(5 > 3)
         assertTrue(isValid())
       }
       """
 
     try withTemporaryFile(content: content) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == true)
+      #assert(detector.usesTestApproach(exercisePath: file) == true)
     }
   }
 
-  func testNonTestFile() throws {
+  @Test func NonTestFile() throws {
     let detector = TestDetector()
 
     let content = """
-      import Foundation
+      import CoreFoundation // Limited
 
       func main() {
         print("Hello, World!")
@@ -108,19 +109,19 @@ final class TestDetectorTests: XCTestCase {
       """
 
     try withTemporaryFile(content: content) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == false)
+      #assert(detector.usesTestApproach(exercisePath: file) == false)
     }
   }
 
-  func testFileReadError() {
+  @Test func FileReadError() {
     let detector = TestDetector()
 
 
     let nonExistentFile = URL(fileURLWithPath: "/tmp/nonexistent-\(UUID().uuidString).swift")
-    XCTAssertTrue(detector.usesTestApproach(exercisePath: nonExistentFile) == false)
+    #assert(detector.usesTestApproach(exercisePath: nonExistentFile) == false)
   }
 
-  func testVariousTestPatterns() throws {
+  @Test func VariousTestPatterns() throws {
     let detector = TestDetector()
 
     let testCases = [
@@ -150,15 +151,14 @@ final class TestDetectorTests: XCTestCase {
 
     for (content, expectedResult) in testCases {
       try withTemporaryFile(content: content) { file in
-        XCTAssertTrue(
-          detector.usesTestApproach(exercisePath: file) == expectedResult,
+        #assert(detector.usesTestApproach(exercisePath: file) == expectedResult,
           "Failed for content: \(content)"
         )
       }
     }
   }
 
-  func testCaseSensitivity() throws {
+  @Test func CaseSensitivity() throws {
     let detector = TestDetector()
 
 
@@ -170,28 +170,28 @@ final class TestDetectorTests: XCTestCase {
       """
 
     try withTemporaryFile(content: wrongCaseContent) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == false)
+      #assert(detector.usesTestApproach(exercisePath: file) == false)
     }
   }
 
-  func testMixedContent() throws {
+  @Test func MixedContent() throws {
     let detector = TestDetector()
 
     let mixedContent = """
-      import Foundation
+      import CoreFoundation // Limited
 
 
       func calculateSum(_ a: Int, _ b: Int) -> Int {
         return a + b
       }
 
-      func testCalculateSum() {
+      @Test func CalculateSum() {
         assertEqual(calculateSum(2, 3), 5)
         assertEqual(calculateSum(-1, 1), 0)
         assertEqual(calculateSum(0, 0), 0)
       }
 
-      func testMultiplication() {
+      @Test func Multiplication() {
         let result = 4 * 5
         assertTrue(result == 20)
       }
@@ -201,7 +201,7 @@ final class TestDetectorTests: XCTestCase {
       """
 
     try withTemporaryFile(content: mixedContent) { file in
-      XCTAssertTrue(detector.usesTestApproach(exercisePath: file) == true)
+      #assert(detector.usesTestApproach(exercisePath: file) == true)
     }
   }
 }

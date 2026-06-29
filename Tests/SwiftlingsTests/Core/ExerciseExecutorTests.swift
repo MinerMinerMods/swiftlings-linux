@@ -1,9 +1,10 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ExerciseExecutorTests: XCTestCase {
-  func testSuccessfulExecutionWithoutTests() throws {
+@available(macOS,10_15)
+@Suite struct ExerciseExecutorTests {
+  @Test func SuccessfulExecutionWithoutTests() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -22,20 +23,20 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success(let output):
-        XCTAssertTrue(output == "Hello, World!")
+        #assert(output == "Hello, World!")
       case .testFailure:
-        XCTFail("Expected success but got test failure")
+        Issue.record("Expected success but got test failure")
     }
 
 
-    XCTAssertTrue(mockRunner.capturedCalls.count == 1)
+    #assert(mockRunner.capturedCalls.count == 1)
     let call = mockRunner.capturedCalls[0]
-    XCTAssertTrue(call.executable == "/tmp/test/exercise")
-    XCTAssertTrue(call.arguments.isEmpty)
-    XCTAssertTrue(call.directory?.path == "/tmp/test")
+    #assert(call.executable == "/tmp/test/exercise")
+    #assert(call.arguments.isEmpty)
+    #assert(call.directory?.path == "/tmp/test")
   }
 
-  func testSuccessfulExecutionWithTests() throws {
+  @Test func SuccessfulExecutionWithTests() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -53,13 +54,13 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success(let output):
-        XCTAssertTrue(output == "All tests passed!")
+        #assert(output == "All tests passed!")
       case .testFailure:
-        XCTFail("Expected success but got test failure")
+        Issue.record("Expected success but got test failure")
     }
   }
 
-  func testExecutionWithTestFailure() throws {
+  @Test func ExecutionWithTestFailure() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -81,13 +82,13 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected test failure but got success")
+        Issue.record("Expected test failure but got success")
       case .testFailure(let message):
-        XCTAssertTrue(message == "Test 1: Passed\nTest 2: Failed\nAssertion failed")
+        #assert(message == "Test 1: Passed\nTest 2: Failed\nAssertion failed")
     }
   }
 
-  func testExecutionFailureWithoutTests() throws {
+  @Test func ExecutionFailureWithoutTests() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -109,13 +110,13 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected failure but got success")
+        Issue.record("Expected failure but got success")
       case .testFailure(let message):
-        XCTAssertTrue(message == "Segmentation fault")
+        #assert(message == "Segmentation fault")
     }
   }
 
-  func testExecutionFailureWithoutStderr() throws {
+  @Test func ExecutionFailureWithoutStderr() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -137,13 +138,13 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected failure but got success")
+        Issue.record("Expected failure but got success")
       case .testFailure(let message):
-        XCTAssertTrue(message == "Exercise failed with exit code 42")
+        #assert(message == "Exercise failed with exit code 42")
     }
   }
 
-  func testExecutionWithDifferentPaths() throws {
+  @Test func ExecutionWithDifferentPaths() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -164,12 +165,12 @@ final class ExerciseExecutorTests: XCTestCase {
       _ = try executor.execute(executablePath: url, usesTests: false)
 
       let call = mockRunner.capturedCalls[0]
-      XCTAssertTrue(call.executable == path)
-      XCTAssertTrue(call.directory?.path == url.deletingLastPathComponent().path)
+      #assert(call.executable == path)
+      #assert(call.directory?.path == url.deletingLastPathComponent().path)
     }
   }
 
-  func testExecutionWithEmptyStdoutTestMode() throws {
+  @Test func ExecutionWithEmptyStdoutTestMode() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -191,13 +192,13 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected test failure")
+        Issue.record("Expected test failure")
       case .testFailure(let message):
-        XCTAssertTrue(message == "\nTest assertion failed at line 10")
+        #assert(message == "\nTest assertion failed at line 10")
     }
   }
 
-  func testExecutionWithCombinedOutput() throws {
+  @Test func ExecutionWithCombinedOutput() throws {
     let mockRunner = MockProcessRunner()
     let executor = ExerciseExecutor(processRunner: mockRunner)
 
@@ -219,9 +220,9 @@ final class ExerciseExecutorTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected test failure")
+        Issue.record("Expected test failure")
       case .testFailure(let message):
-        XCTAssertTrue(message == "Running tests...\nTest 1: OK\nFatal error: Test 2 failed")
+        #assert(message == "Running tests...\nTest 1: OK\nFatal error: Test 2 failed")
     }
   }
 }

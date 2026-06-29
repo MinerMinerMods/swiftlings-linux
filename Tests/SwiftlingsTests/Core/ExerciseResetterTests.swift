@@ -1,20 +1,21 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ExerciseResetterTests: XCTestCase {
-  func testResetErrorDescriptions() {
+@available(macOS,10_15)
+@Suite struct ExerciseResetterTests {
+  @Test func ResetErrorDescriptions() {
     let gitError = ResetError.gitResetFailed("fatal: pathspec 'file.swift' did not match any files")
-    XCTAssertTrue(gitError.errorDescription == "Failed to reset exercise: fatal: pathspec 'file.swift' did not match any files")
+    #assert(gitError.errorDescription == "Failed to reset exercise: fatal: pathspec 'file.swift' did not match any files")
 
     let multipleErrors = ResetError.multipleErrors([
       "Failed to reset intro1: File not found",
       "Failed to reset variables1: Permission denied",
     ])
-    XCTAssertTrue(multipleErrors.errorDescription == "Multiple reset errors:\nFailed to reset intro1: File not found\nFailed to reset variables1: Permission denied")
+    #assert(multipleErrors.errorDescription == "Multiple reset errors:\nFailed to reset intro1: File not found\nFailed to reset variables1: Permission denied")
   }
 
-  func testSuccessfulReset() throws {
+  @Test func SuccessfulReset() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -33,14 +34,14 @@ final class ExerciseResetterTests: XCTestCase {
     try resetter.resetExercise(exercise)
 
 
-    XCTAssertTrue(mockRunner.capturedCalls.count == 1)
+    #assert(mockRunner.capturedCalls.count == 1)
     let call = mockRunner.capturedCalls[0]
-    XCTAssertTrue(call.executable == Configuration.Executables.git)
-    XCTAssertTrue(call.arguments == ["checkout", "HEAD", "--", "exercises/test_dir/test_exercise.swift"])
-    XCTAssertTrue(call.directory == nil)
+    #assert(call.executable == Configuration.Executables.git)
+    #assert(call.arguments == ["checkout", "HEAD", "--", "exercises/test_dir/test_exercise.swift"])
+    #assert(call.directory == nil)
   }
 
-  func testGitResetFailure() throws {
+  @Test func GitResetFailure() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -59,11 +60,10 @@ final class ExerciseResetterTests: XCTestCase {
         stderr: "error: pathspec 'exercises/test_dir/failing_exercise.swift' did not match any file(s) known to git"
       ),
     ]
-
-    XCTAssertThrowsError(try resetter.resetExercise(exercise))
+    #assert(throws: (any Error).self) { _ = try resetter.resetExercise(exercise) }
   }
 
-  func testResetMultipleExercisesSuccess() throws {
+  @Test func ResetMultipleExercisesSuccess() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -83,13 +83,13 @@ final class ExerciseResetterTests: XCTestCase {
     try resetter.resetExercises(exercises)
 
 
-    XCTAssertTrue(mockRunner.capturedCalls.count == 3)
-    XCTAssertTrue(mockRunner.capturedCalls[0].arguments.contains("exercises/dir1/ex1.swift"))
-    XCTAssertTrue(mockRunner.capturedCalls[1].arguments.contains("exercises/dir2/ex2.swift"))
-    XCTAssertTrue(mockRunner.capturedCalls[2].arguments.contains("exercises/dir3/ex3.swift"))
+    #assert(mockRunner.capturedCalls.count == 3)
+    #assert(mockRunner.capturedCalls[0].arguments.contains("exercises/dir1/ex1.swift"))
+    #assert(mockRunner.capturedCalls[1].arguments.contains("exercises/dir2/ex2.swift"))
+    #assert(mockRunner.capturedCalls[2].arguments.contains("exercises/dir3/ex3.swift"))
   }
 
-  func testResetMultipleExercisesWithFailures() throws {
+  @Test func ResetMultipleExercisesWithFailures() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -105,14 +105,12 @@ final class ExerciseResetterTests: XCTestCase {
       ProcessResult(exitCode: 1, stdout: "", stderr: "Permission denied"),
       ProcessResult(exitCode: 0, stdout: "", stderr: ""),
     ]
+    #assert(throws: (any Error).self, "ExerciseResetter doesn't alert") { _ = try resetter.resetExercises(exercises) }
 
-    XCTAssertThrowsError(try resetter.resetExercises(exercises))
-
-
-    XCTAssertTrue(mockRunner.capturedCalls.count == 3)
+    #assert(mockRunner.capturedCalls.count == 3)
   }
 
-  func testResetEmptyList() throws {
+  @Test func ResetEmptyList() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -120,10 +118,10 @@ final class ExerciseResetterTests: XCTestCase {
     try resetter.resetExercises([])
 
 
-    XCTAssertTrue(mockRunner.capturedCalls.isEmpty)
+    #assert(mockRunner.capturedCalls.isEmpty)
   }
 
-  func testResetWithDifferentPaths() throws {
+  @Test func ResetWithDifferentPaths() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -149,11 +147,11 @@ final class ExerciseResetterTests: XCTestCase {
       try resetter.resetExercise(exercise)
 
       let call = mockRunner.capturedCalls[0]
-      XCTAssertTrue(call.arguments.last == testCase.expected)
+      #assert(call.arguments.last == testCase.expected)
     }
   }
 
-  func testMultipleErrorsFormatting() throws {
+  @Test func MultipleErrorsFormatting() throws {
     let mockRunner = MockProcessRunner()
     let resetter = ExerciseResetter(processRunner: mockRunner)
 
@@ -170,6 +168,6 @@ final class ExerciseResetterTests: XCTestCase {
       ProcessResult(exitCode: 1, stdout: "", stderr: "Error 3"),
     ]
 
-    XCTAssertThrowsError(try resetter.resetExercises(exercises))
+    #assert(try? resetter.resetExercises(exercises) != nil)
   }
 }

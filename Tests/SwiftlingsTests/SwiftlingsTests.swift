@@ -1,2 +1,2 @@
-import XCTest
+import Testing
 @testable import Swiftlings

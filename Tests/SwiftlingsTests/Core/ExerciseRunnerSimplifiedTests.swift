@@ -1,25 +1,26 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ExerciseRunnerSimplifiedTests: XCTestCase {
-  func testCompilationError() {
+@available(macOS,10_15)
+@Suite struct ExerciseRunnerSimplifiedTests {
+  @Test func CompilationError() {
     let error = CompilationError(message: "Failed to compile")
-    XCTAssertTrue(error.message == "Failed to compile")
+    #assert(error.message == "Failed to compile")
   }
 
-  func testExerciseResultProperties() {
+  @Test func ExerciseResultProperties() {
     let success = ExerciseResult.success(output: "Test passed")
-    XCTAssertTrue(success.isSuccess == true)
+    #assert(success.isSuccess == true)
 
     let compilationError = ExerciseResult.compilationError(message: "Syntax error")
-    XCTAssertTrue(compilationError.isSuccess == false)
+    #assert(compilationError.isSuccess == false)
 
     let testFailure = ExerciseResult.testFailure(message: "Assertion failed")
-    XCTAssertTrue(testFailure.isSuccess == false)
+    #assert(testFailure.isSuccess == false)
   }
 
-  func testExerciseResultPatterns() {
+  @Test func ExerciseResultPatterns() {
     let results: [ExerciseResult] = [
       .success(output: "Output"),
       .compilationError(message: "Error"),
@@ -29,14 +30,14 @@ final class ExerciseRunnerSimplifiedTests: XCTestCase {
     for result in results {
       switch result {
         case .success(let output):
-          XCTAssertTrue(result.isSuccess)
-          XCTAssertTrue(!output.isEmpty)
+          #assert(result.isSuccess)
+          #assert(!output.isEmpty)
         case .compilationError(let message):
-          XCTAssertTrue(!result.isSuccess)
-          XCTAssertTrue(!message.isEmpty)
+          #assert(!result.isSuccess)
+          #assert(!message.isEmpty)
         case .testFailure(let message):
-          XCTAssertTrue(!result.isSuccess)
-          XCTAssertTrue(!message.isEmpty)
+          #assert(!result.isSuccess)
+          #assert(!message.isEmpty)
       }
     }
   }

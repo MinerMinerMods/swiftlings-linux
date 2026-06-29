@@ -1,8 +1,9 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ExerciseCompilerTests: XCTestCase {
+@available(macOS,10_15)
+@Suite struct ExerciseCompilerTests {
 
   class MockFileManager: FileManager {
     var fileExistsResponses: [String: Bool] = [:]
@@ -12,15 +13,15 @@ final class ExerciseCompilerTests: XCTestCase {
     }
   }
 
-  func testCompilationResultProperties() {
+  @Test func CompilationResultProperties() {
     let success = CompilationResult.success(output: "Compilation successful")
-    XCTAssertTrue(success.isSuccess == true)
+    #assert(success.isSuccess == true)
 
     let failure = CompilationResult.failure(message: "Error: undefined symbol")
-    XCTAssertTrue(failure.isSuccess == false)
+    #assert(failure.isSuccess == false)
   }
 
-  func testSuccessfulCompilation() throws {
+  @Test func SuccessfulCompilation() throws {
     let mockRunner = MockProcessRunner()
     let mockFileManager = MockFileManager()
     let compiler = ExerciseCompiler(
@@ -54,20 +55,20 @@ final class ExerciseCompilerTests: XCTestCase {
 
     switch result {
       case .success(let output):
-        XCTAssertTrue(output == "Compilation successful")
+        #assert(output == "Compilation successful")
       case .failure:
-        XCTFail("Expected success but got failure")
+        Issue.record("Expected success but got failure")
     }
 
 
-    XCTAssertTrue(mockRunner.capturedCalls.count == 1)
+    #assert(mockRunner.capturedCalls.count == 1)
     let call = mockRunner.capturedCalls[0]
-    XCTAssertTrue(call.executable == Configuration.Executables.swiftc)
-    XCTAssertTrue(call.arguments == ["-color-diagnostics", "-o", "exercise", "main.swift", "test_exercise.swift"])
-    XCTAssertTrue(call.directory?.path == "/tmp/test")
+    #assert(call.executable == Configuration.Executables.swiftc)
+    #assert(call.arguments == ["-color-diagnostics", "-o", "exercise", "main.swift", "test_exercise.swift"])
+    #assert(call.directory?.path == "/tmp/test")
   }
 
-  func testCompilationWithAssert() throws {
+  @Test func CompilationWithAssert() throws {
     let mockRunner = MockProcessRunner()
     let mockFileManager = MockFileManager()
     let compiler = ExerciseCompiler(
@@ -98,15 +99,15 @@ final class ExerciseCompilerTests: XCTestCase {
       includeAssert: true
     )
 
-    XCTAssertTrue(result.isSuccess)
+    #assert(result.isSuccess)
 
 
     let call = mockRunner.capturedCalls[0]
-    XCTAssertTrue(call.arguments.contains("Assert.swift"))
-    XCTAssertTrue(call.arguments == ["-color-diagnostics", "-o", "exercise", "main.swift", "assert_test.swift", "Assert.swift"])
+    #assert(call.arguments.contains("Assert.swift"))
+    #assert(call.arguments == ["-color-diagnostics", "-o", "exercise", "main.swift", "assert_test.swift", "Assert.swift"])
   }
 
-  func testCompilationWithoutAssertFlag() throws {
+  @Test func CompilationWithoutAssertFlag() throws {
     let mockRunner = MockProcessRunner()
     let mockFileManager = MockFileManager()
     let compiler = ExerciseCompiler(
@@ -136,14 +137,14 @@ final class ExerciseCompilerTests: XCTestCase {
       includeAssert: false
     )
 
-    XCTAssertTrue(result.isSuccess)
+    #assert(result.isSuccess)
 
 
     let call = mockRunner.capturedCalls[0]
-    XCTAssertTrue(!call.arguments.contains("Assert.swift"))
+    #assert(!call.arguments.contains("Assert.swift"))
   }
 
-  func testCompilationFailure() throws {
+  @Test func CompilationFailure() throws {
     let mockRunner = MockProcessRunner()
     let mockFileManager = MockFileManager()
     let compiler = ExerciseCompiler(
@@ -178,13 +179,13 @@ final class ExerciseCompilerTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected failure but got success")
+        Issue.record("Expected failure but got success")
       case .failure(let message):
-        XCTAssertTrue(message == "error: use of unresolved identifier 'foo'")
+        #assert(message == "error: use of unresolved identifier 'foo'")
     }
   }
 
-  func testCompilationFailureWithStdout() throws {
+  @Test func CompilationFailureWithStdout() throws {
     let mockRunner = MockProcessRunner()
     let compiler = ExerciseCompiler(
       processRunner: mockRunner,
@@ -214,13 +215,13 @@ final class ExerciseCompilerTests: XCTestCase {
 
     switch result {
       case .success:
-        XCTFail("Expected failure")
+        Issue.record("Expected failure")
       case .failure(let message):
-        XCTAssertTrue(message == "Error output in stdout")
+        #assert(message == "Error output in stdout")
     }
   }
 
-  func testCompilationWithDifferentExerciseNames() throws {
+  @Test func CompilationWithDifferentExerciseNames() throws {
     let mockRunner = MockProcessRunner()
     let compiler = ExerciseCompiler(
       processRunner: mockRunner,
@@ -249,7 +250,7 @@ final class ExerciseCompilerTests: XCTestCase {
       )
 
       let call = mockRunner.capturedCalls[0]
-      XCTAssertTrue(call.arguments.contains("\(name).swift"))
+      #assert(call.arguments.contains("\(name).swift"))
     }
   }
 }

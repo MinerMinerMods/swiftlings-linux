@@ -1,8 +1,9 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ProgressTrackerTests: XCTestCase {
+@available(macOS,10_15)
+@Suite struct ProgressTrackerTests {
 
   func withTemporaryDirectory(_ test: (URL) throws -> Void) throws {
     let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -19,54 +20,54 @@ final class ProgressTrackerTests: XCTestCase {
     try test(tempDir)
   }
 
-  func testInitializationWithNoState() throws {
+  @Test func InitializationWithNoState() throws {
     try withTemporaryDirectory { _ in
       let tracker = ProgressTracker()
 
-      XCTAssertTrue(tracker.getCurrentExercise() == nil)
-      XCTAssertTrue(!tracker.isCompleted("any_exercise"))
+      #assert(tracker.getCurrentExercise() == nil)
+      #assert(!tracker.isCompleted("any_exercise"))
 
       let stats = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(stats.completed == 0)
-      XCTAssertTrue(stats.percentage == 0.0)
+      #assert(stats.completed == 0)
+      #assert(stats.percentage == 0.0)
     }
   }
 
-  func testMarkCompleted() throws {
+  @Test func MarkCompleted() throws {
     try withTemporaryDirectory { _ in
       let tracker = ProgressTracker()
 
-      XCTAssertTrue(!tracker.isCompleted("variables1"))
+      #assert(!tracker.isCompleted("variables1"))
 
       tracker.markCompleted("variables1")
 
-      XCTAssertTrue(tracker.isCompleted("variables1"))
-      XCTAssertTrue(!tracker.isCompleted("variables2"))
+      #assert(tracker.isCompleted("variables1"))
+      #assert(!tracker.isCompleted("variables2"))
     }
   }
 
-  func testCurrentExercise() throws {
+  @Test func CurrentExercise() throws {
     try withTemporaryDirectory { _ in
       let tracker = ProgressTracker()
 
-      XCTAssertTrue(tracker.getCurrentExercise() == nil)
+      #assert(tracker.getCurrentExercise() == nil)
 
       tracker.setCurrentExercise("functions1")
-      XCTAssertTrue(tracker.getCurrentExercise() == "functions1")
+      #assert(tracker.getCurrentExercise() == "functions1")
 
       tracker.setCurrentExercise("functions2")
-      XCTAssertTrue(tracker.getCurrentExercise() == "functions2")
+      #assert(tracker.getCurrentExercise() == "functions2")
     }
   }
 
-  func testProgressStatistics() throws {
+  @Test func ProgressStatistics() throws {
     try withTemporaryDirectory { _ in
       let tracker = ProgressTracker()
 
 
       var stats = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(stats.completed == 0)
-      XCTAssertTrue(stats.percentage == 0.0)
+      #assert(stats.completed == 0)
+      #assert(stats.percentage == 0.0)
 
 
       tracker.markCompleted("ex1")
@@ -74,8 +75,8 @@ final class ProgressTrackerTests: XCTestCase {
       tracker.markCompleted("ex3")
 
       stats = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(stats.completed == 3)
-      XCTAssertTrue(stats.percentage == 30.0)
+      #assert(stats.completed == 3)
+      #assert(stats.percentage == 30.0)
 
 
       for i in 4 ... 10 {
@@ -83,17 +84,17 @@ final class ProgressTrackerTests: XCTestCase {
       }
 
       stats = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(stats.completed == 10)
-      XCTAssertTrue(stats.percentage == 100.0)
+      #assert(stats.completed == 10)
+      #assert(stats.percentage == 100.0)
 
 
       stats = tracker.getStats(totalExercises: 0)
-      XCTAssertTrue(stats.completed == 10)
-      XCTAssertTrue(stats.percentage == 0.0)
+      #assert(stats.completed == 10)
+      #assert(stats.percentage == 0.0)
     }
   }
 
-  func testResetProgress() throws {
+  @Test func ResetProgress() throws {
     try withTemporaryDirectory { _ in
       let tracker = ProgressTracker()
 
@@ -102,24 +103,24 @@ final class ProgressTrackerTests: XCTestCase {
       tracker.markCompleted("ex2")
       tracker.setCurrentExercise("ex3")
 
-      XCTAssertTrue(tracker.isCompleted("ex1"))
-      XCTAssertTrue(tracker.isCompleted("ex2"))
-      XCTAssertTrue(tracker.getCurrentExercise() == "ex3")
+      #assert(tracker.isCompleted("ex1"))
+      #assert(tracker.isCompleted("ex2"))
+      #assert(tracker.getCurrentExercise() == "ex3")
 
 
       tracker.resetProgress()
 
-      XCTAssertTrue(!tracker.isCompleted("ex1"))
-      XCTAssertTrue(!tracker.isCompleted("ex2"))
-      XCTAssertTrue(tracker.getCurrentExercise() == nil)
+      #assert(!tracker.isCompleted("ex1"))
+      #assert(!tracker.isCompleted("ex2"))
+      #assert(tracker.getCurrentExercise() == nil)
 
       let stats = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(stats.completed == 0)
-      XCTAssertTrue(stats.percentage == 0.0)
+      #assert(stats.completed == 0)
+      #assert(stats.percentage == 0.0)
     }
   }
 
-  func testStatePersistence() throws {
+  @Test func StatePersistence() throws {
     try withTemporaryDirectory { tempDir in
 
       let stateFile = tempDir.appendingPathComponent(".swiftlings-state.json")
@@ -143,37 +144,37 @@ final class ProgressTrackerTests: XCTestCase {
       decoder.dateDecodingStrategy = .iso8601
       let loadedState = try decoder.decode(ProgressTracker.ProgressState.self, from: data)
 
-      XCTAssertTrue(loadedState.completedExercises.contains("persistent1"))
-      XCTAssertTrue(loadedState.completedExercises.contains("persistent2"))
-      XCTAssertTrue(loadedState.currentExercise == "persistent3")
+      #assert(loadedState.completedExercises.contains("persistent1"))
+      #assert(loadedState.completedExercises.contains("persistent2"))
+      #assert(loadedState.currentExercise == "persistent3")
     }
   }
 
-  func testMultipleCompletions() throws {
+  @Test func MultipleCompletions() throws {
     try withTemporaryDirectory { _ in
       let tracker = ProgressTracker()
       let exercises = ["intro1", "variables1", "functions1", "arrays1", "structs1"]
 
       for exercise in exercises {
-        XCTAssertTrue(!tracker.isCompleted(exercise))
+        #assert(!tracker.isCompleted(exercise))
         tracker.markCompleted(exercise)
-        XCTAssertTrue(tracker.isCompleted(exercise))
+        #assert(tracker.isCompleted(exercise))
       }
 
       let stats = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(stats.completed == 5)
-      XCTAssertTrue(stats.percentage == 50.0)
+      #assert(stats.completed == 5)
+      #assert(stats.percentage == 50.0)
 
 
       tracker.markCompleted("intro1")
       tracker.markCompleted("intro1")
 
       let statsAfter = tracker.getStats(totalExercises: 10)
-      XCTAssertTrue(statsAfter.completed == 5)
+      #assert(statsAfter.completed == 5)
     }
   }
 
-  func testStateFileFormat() throws {
+  @Test func StateFileFormat() throws {
 
 
     var state = ProgressTracker.ProgressState()
@@ -188,9 +189,9 @@ final class ProgressTrackerTests: XCTestCase {
 
     let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
-    XCTAssertTrue(json != nil)
-    XCTAssertTrue(json?["currentExercise"] as? String == "test2")
-    XCTAssertTrue((json?["completedExercises"] as? [String])?.contains("test1") == true)
-    XCTAssertTrue(json?["lastUpdated"] != nil)
+    #assert(json != nil)
+    #assert(json?["currentExercise"] as? String == "test2")
+    #assert((json?["completedExercises"] as? [String])?.contains("test1") == true)
+    #assert(json?["lastUpdated"] != nil)
   }
 }

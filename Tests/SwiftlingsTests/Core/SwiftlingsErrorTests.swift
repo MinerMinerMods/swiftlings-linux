@@ -1,34 +1,35 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class SwiftlingsErrorTests: XCTestCase {
-  func testSwiftlingsErrorProtocol() {
+@available(macOS,10_15)
+@Suite struct SwiftlingsErrorTests {
+  @Test func SwiftlingsErrorProtocol() {
     let error: SwiftlingsError = ExerciseError.notFound(name: "test")
-    XCTAssertTrue(error.errorDescription == "Exercise 'test' not found")
-    XCTAssertTrue(error.userMessage == "Exercise 'test' not found")
+    #assert(error.errorDescription == "Exercise 'test' not found")
+    #assert(error.userMessage == "Exercise 'test' not found")
   }
 
-  func testExerciseError() {
+  @Test func ExerciseError() {
 
     let notFound = ExerciseError.notFound(name: "variables1")
-    XCTAssertTrue(notFound.userMessage == "Exercise 'variables1' not found")
+    #assert(notFound.userMessage == "Exercise 'variables1' not found")
 
 
     let compilationFailed = ExerciseError.compilationFailed(
       message: "error: use of unresolved identifier 'foo'"
     )
-    XCTAssertTrue(compilationFailed.userMessage == "Compilation failed:\nerror: use of unresolved identifier 'foo'")
+    #assert(compilationFailed.userMessage == "Compilation failed:\nerror: use of unresolved identifier 'foo'")
 
 
     let testsFailed = ExerciseError.testsFailed(
       message: "Test case 'testAddition' failed: Expected 4 but got 5"
     )
-    XCTAssertTrue(testsFailed.userMessage == "Tests failed:\nTest case 'testAddition' failed: Expected 4 but got 5")
+    #assert(testsFailed.userMessage == "Tests failed:\nTest case 'testAddition' failed: Expected 4 but got 5")
 
 
     let executionFailed = ExerciseError.executionFailed(exitCode: 127)
-    XCTAssertTrue(executionFailed.userMessage == "Exercise failed with exit code 127")
+    #assert(executionFailed.userMessage == "Exercise failed with exit code 127")
 
 
     let underlyingError = NSError(domain: "TestDomain", code: 1, userInfo: [
@@ -38,31 +39,31 @@ final class SwiftlingsErrorTests: XCTestCase {
       path: "/path/to/file.swift",
       underlying: underlyingError
     )
-    XCTAssertTrue(fileReadError.userMessage == "Failed to read file '/path/to/file.swift': Permission denied")
+    #assert(fileReadError.userMessage == "Failed to read file '/path/to/file.swift': Permission denied")
   }
 
-  func testProgressError() {
+  @Test func ProgressError() {
     let underlyingError = NSError(domain: "TestDomain", code: 2, userInfo: [
       NSLocalizedDescriptionKey: "File not found",
     ])
 
 
     let failedToLoad = ProgressError.failedToLoad(underlying: underlyingError)
-    XCTAssertTrue(failedToLoad.userMessage == "Failed to load progress: File not found")
+    #assert(failedToLoad.userMessage == "Failed to load progress: File not found")
 
 
     let failedToSave = ProgressError.failedToSave(underlying: underlyingError)
-    XCTAssertTrue(failedToSave.userMessage == "Failed to save progress: File not found")
+    #assert(failedToSave.userMessage == "Failed to save progress: File not found")
 
 
     let corrupted = ProgressError.corrupted(message: "Invalid JSON structure")
-    XCTAssertTrue(corrupted.userMessage == "Progress file corrupted: Invalid JSON structure")
+    #assert(corrupted.userMessage == "Progress file corrupted: Invalid JSON structure")
   }
 
-  func testProcessError() {
+  @Test func ProcessError() {
 
     let execNotFound = ProcessError.executableNotFound(path: "/usr/bin/nonexistent")
-    XCTAssertTrue(execNotFound.userMessage == "Executable not found: /usr/bin/nonexistent")
+    #assert(execNotFound.userMessage == "Executable not found: /usr/bin/nonexistent")
 
 
     let execFailed = ProcessError.executionFailed(
@@ -70,25 +71,25 @@ final class SwiftlingsErrorTests: XCTestCase {
       exitCode: 1,
       stderr: "error: module 'Foundation' not found"
     )
-    XCTAssertTrue(execFailed.userMessage == "swiftc failed (exit code 1):\nerror: module 'Foundation' not found")
+    #assert(execFailed.userMessage == "swiftc failed (exit code 1):\nerror: module 'Foundation' not found")
 
 
     let timeout = ProcessError.timeout(executable: "swift")
-    XCTAssertTrue(timeout.userMessage == "swift timed out")
+    #assert(timeout.userMessage == "swift timed out")
   }
 
-  func testFileSystemError() {
+  @Test func FileSystemError() {
 
     let fileNotFound = FileSystemError.fileNotFound(path: "/path/to/missing.swift")
-    XCTAssertTrue(fileNotFound.userMessage == "File not found: /path/to/missing.swift")
+    #assert(fileNotFound.userMessage == "File not found: /path/to/missing.swift")
 
 
     let dirNotFound = FileSystemError.directoryNotFound(path: "/missing/directory")
-    XCTAssertTrue(dirNotFound.userMessage == "Directory not found: /missing/directory")
+    #assert(dirNotFound.userMessage == "Directory not found: /missing/directory")
 
 
     let permDenied = FileSystemError.permissionDenied(path: "/root/protected.file")
-    XCTAssertTrue(permDenied.userMessage == "Permission denied: /root/protected.file")
+    #assert(permDenied.userMessage == "Permission denied: /root/protected.file")
 
 
     let createError = NSError(domain: "TestDomain", code: 3, userInfo: [
@@ -98,7 +99,7 @@ final class SwiftlingsErrorTests: XCTestCase {
       path: "/new/dir",
       underlying: createError
     )
-    XCTAssertTrue(failedCreate.userMessage == "Failed to create directory '/new/dir': Disk full")
+    #assert(failedCreate.userMessage == "Failed to create directory '/new/dir': Disk full")
 
 
     let copyError = NSError(domain: "TestDomain", code: 4, userInfo: [
@@ -109,43 +110,43 @@ final class SwiftlingsErrorTests: XCTestCase {
       to: "/dest.txt",
       underlying: copyError
     )
-    XCTAssertTrue(failedCopy.userMessage == "Failed to copy '/source.txt' to '/dest.txt': Source file missing")
+    #assert(failedCopy.userMessage == "Failed to copy '/source.txt' to '/dest.txt': Source file missing")
   }
 
-  func testConfigurationError() {
+  @Test func ConfigurationError() {
 
     let missingInfo = ConfigurationError.missingInfoFile
-    XCTAssertTrue(missingInfo.userMessage == "Exercise info file not found. Are you in a Swiftlings directory?")
+    #assert(missingInfo.userMessage == "Exercise info file not found. Are you in a Swiftlings directory?")
 
 
     let invalidInfo = ConfigurationError.invalidInfoFile(message: "Missing 'exercises' key")
-    XCTAssertTrue(invalidInfo.userMessage == "Invalid exercise info file: Missing 'exercises' key")
+    #assert(invalidInfo.userMessage == "Invalid exercise info file: Missing 'exercises' key")
 
 
     let incompatible = ConfigurationError.incompatibleVersion(found: "2.0", required: "1.0")
-    XCTAssertTrue(incompatible.userMessage == "Incompatible version: found 2.0, required 1.0")
+    #assert(incompatible.userMessage == "Incompatible version: found 2.0, required 1.0")
   }
 
-  func testErrorsWithSpecialCharacters() {
+  @Test func ErrorsWithSpecialCharacters() {
 
     let specialName = ExerciseError.notFound(name: "test-exercise_123")
-    XCTAssertTrue(specialName.userMessage == "Exercise 'test-exercise_123' not found")
+    #assert(specialName.userMessage == "Exercise 'test-exercise_123' not found")
 
 
     let complexMessage = ExerciseError.compilationFailed(
       message: "error: \"string\" literal\n\tat line 10: unexpected character '🎯'"
     )
-    XCTAssertTrue(complexMessage.userMessage.contains("\"string\" literal"))
-    XCTAssertTrue(complexMessage.userMessage.contains("🎯"))
+    #assert(complexMessage.userMessage.contains("\"string\" literal"))
+    #assert(complexMessage.userMessage.contains("🎯"))
 
 
     let pathWithSpaces = FileSystemError.fileNotFound(
       path: "/Users/John Doe/My Documents/file.swift"
     )
-    XCTAssertTrue(pathWithSpaces.userMessage == "File not found: /Users/John Doe/My Documents/file.swift")
+    #assert(pathWithSpaces.userMessage == "File not found: /Users/John Doe/My Documents/file.swift")
   }
 
-  func testErrorAsLocalizedError() {
+  @Test func ErrorAsLocalizedError() {
     let errors: [LocalizedError] = [
       ExerciseError.notFound(name: "test"),
       ProgressError.corrupted(message: "test"),
@@ -155,8 +156,8 @@ final class SwiftlingsErrorTests: XCTestCase {
     ]
 
     for error in errors {
-      XCTAssertTrue(error.errorDescription != nil)
-      XCTAssertTrue(!error.errorDescription!.isEmpty)
+      #assert(error.errorDescription != nil)
+      #assert(!error.errorDescription!.isEmpty)
     }
   }
 }

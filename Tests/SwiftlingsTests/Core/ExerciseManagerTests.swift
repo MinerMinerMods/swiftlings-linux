@@ -1,8 +1,9 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ExerciseManagerTests: XCTestCase {
+@available(macOS,10_15)
+@Suite struct ExerciseManagerTests {
   class MockProgressTracker: ProgressTracker {
     var completedExercises: Set<String> = []
     var currentExercise: String?
@@ -53,7 +54,7 @@ final class ExerciseManagerTests: XCTestCase {
     )
   }
 
-  func testExerciseManagerWithTestData() throws {
+  @Test func ExerciseManagerWithTestData() throws {
 
     let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
@@ -83,12 +84,12 @@ final class ExerciseManagerTests: XCTestCase {
 
     let manager = try ExerciseManager()
 
-    XCTAssertTrue(manager.allExercises.count == 5)
-    XCTAssertTrue(manager.welcomeMessage == "Welcome to testing!")
-    XCTAssertTrue(manager.finalMessage == "Congratulations on testing!")
+    #assert(manager.allExercises.count == 5)
+    #assert(manager.welcomeMessage == "Welcome to testing!")
+    #assert(manager.finalMessage == "Congratulations on testing!")
   }
 
-  func testGetAllExercises() throws {
+  @Test func GetAllExercises() throws {
 
 
     _ = MockProgressTracker()
@@ -101,12 +102,12 @@ final class ExerciseManagerTests: XCTestCase {
 
 
 
-    XCTAssertTrue(exercises.count == 2)
-    XCTAssertTrue(exercises[0].name == "ex1")
-    XCTAssertTrue(exercises[1].name == "ex2")
+    #assert(exercises.count == 2)
+    #assert(exercises[0].name == "ex1")
+    #assert(exercises[1].name == "ex2")
   }
 
-  func testGetExerciseByName() {
+  @Test func GetExerciseByName() {
     let exercises = [
       Exercise(name: "target", dir: "dir", hint: "hint", dependencies: nil),
       Exercise(name: "other", dir: "dir", hint: "hint", dependencies: nil),
@@ -114,50 +115,50 @@ final class ExerciseManagerTests: XCTestCase {
 
 
     let found = exercises.first { $0.name == "target" }
-    XCTAssertTrue(found?.name == "target")
+    #assert(found?.name == "target")
 
     let notFound = exercises.first { $0.name == "nonexistent" }
-    XCTAssertTrue(notFound == nil)
+    #assert(notFound == nil)
   }
 
-  func testProgressTracking() {
+  @Test func ProgressTracking() {
     let tracker = MockProgressTracker()
     let exercises = createTestMetadata().exercises
 
 
-    XCTAssertTrue(!tracker.isCompleted("intro1"))
-    XCTAssertTrue(!tracker.isCompleted("variables1"))
+    #assert(!tracker.isCompleted("intro1"))
+    #assert(!tracker.isCompleted("variables1"))
 
 
     tracker.markCompleted("intro1")
     tracker.markCompleted("variables1")
 
-    XCTAssertTrue(tracker.isCompleted("intro1"))
-    XCTAssertTrue(tracker.isCompleted("variables1"))
-    XCTAssertTrue(!tracker.isCompleted("intro2"))
+    #assert(tracker.isCompleted("intro1"))
+    #assert(tracker.isCompleted("variables1"))
+    #assert(!tracker.isCompleted("intro2"))
 
 
     let completed = exercises.filter { tracker.isCompleted($0.name) }
     let pending = exercises.filter { !tracker.isCompleted($0.name) }
 
-    XCTAssertTrue(completed.count == 2)
-    XCTAssertTrue(pending.count == 3)
+    #assert(completed.count == 2)
+    #assert(pending.count == 3)
   }
 
-  func testGetNextPendingExercise() {
+  @Test func GetNextPendingExercise() {
     let tracker = MockProgressTracker()
     let exercises = createTestMetadata().exercises
 
 
     let firstPending = exercises.first { !tracker.isCompleted($0.name) }
-    XCTAssertTrue(firstPending?.name == "intro1")
+    #assert(firstPending?.name == "intro1")
 
 
     tracker.markCompleted("intro1")
     tracker.markCompleted("intro2")
 
     let nextPending = exercises.first { !tracker.isCompleted($0.name) }
-    XCTAssertTrue(nextPending?.name == "variables1")
+    #assert(nextPending?.name == "variables1")
 
 
     for exercise in exercises {
@@ -165,29 +166,29 @@ final class ExerciseManagerTests: XCTestCase {
     }
 
     let noPending = exercises.first { !tracker.isCompleted($0.name) }
-    XCTAssertTrue(noPending == nil)
+    #assert(noPending == nil)
   }
 
-  func testExerciseStatus() {
+  @Test func ExerciseStatus() {
     let tracker = MockProgressTracker()
 
 
     let completedStatus = tracker.isCompleted("test") ? "✅" : "❌"
-    XCTAssertTrue(completedStatus == "❌")
+    #assert(completedStatus == "❌")
 
     tracker.markCompleted("test")
     let newStatus = tracker.isCompleted("test") ? "✅" : "❌"
-    XCTAssertTrue(newStatus == "✅")
+    #assert(newStatus == "✅")
   }
 
-  func testProgressStatistics() {
+  @Test func ProgressStatistics() {
     let tracker = MockProgressTracker()
     let totalExercises = 10
 
 
     var stats = tracker.getStats(totalExercises: totalExercises)
-    XCTAssertTrue(stats.completed == 0)
-    XCTAssertTrue(stats.percentage == 0.0)
+    #assert(stats.completed == 0)
+    #assert(stats.percentage == 0.0)
 
 
     tracker.markCompleted("ex1")
@@ -195,8 +196,8 @@ final class ExerciseManagerTests: XCTestCase {
     tracker.markCompleted("ex3")
 
     stats = tracker.getStats(totalExercises: totalExercises)
-    XCTAssertTrue(stats.completed == 3)
-    XCTAssertTrue(stats.percentage == 30.0)
+    #assert(stats.completed == 3)
+    #assert(stats.percentage == 30.0)
 
 
     for i in 1 ... 10 {
@@ -204,25 +205,25 @@ final class ExerciseManagerTests: XCTestCase {
     }
 
     stats = tracker.getStats(totalExercises: totalExercises)
-    XCTAssertTrue(stats.completed == 10)
-    XCTAssertTrue(stats.percentage == 100.0)
+    #assert(stats.completed == 10)
+    #assert(stats.percentage == 100.0)
   }
 
-  func testCurrentExercise() {
+  @Test func CurrentExercise() {
     let tracker = MockProgressTracker()
     let exercises = createTestMetadata().exercises
 
 
-    XCTAssertTrue(tracker.getCurrentExercise() == nil)
+    #assert(tracker.getCurrentExercise() == nil)
 
 
     tracker.setCurrentExercise("variables1")
-    XCTAssertTrue(tracker.getCurrentExercise() == "variables1")
+    #assert(tracker.getCurrentExercise() == "variables1")
 
 
     if let currentName = tracker.getCurrentExercise() {
       let current = exercises.first { $0.name == currentName }
-      XCTAssertTrue(current?.name == "variables1")
+      #assert(current?.name == "variables1")
     }
 
 
@@ -230,10 +231,10 @@ final class ExerciseManagerTests: XCTestCase {
     tracker.markCompleted("intro1")
 
     let firstPending = exercises.first { !tracker.isCompleted($0.name) }
-    XCTAssertTrue(firstPending?.name == "intro2")
+    #assert(firstPending?.name == "intro2")
   }
 
-  func testResetAllProgress() {
+  @Test func ResetAllProgress() {
     let tracker = MockProgressTracker()
 
 
@@ -241,13 +242,13 @@ final class ExerciseManagerTests: XCTestCase {
     tracker.markCompleted("ex2")
     tracker.setCurrentExercise("ex3")
 
-    XCTAssertTrue(tracker.completedExercises.count == 2)
-    XCTAssertTrue(tracker.currentExercise == "ex3")
+    #assert(tracker.completedExercises.count == 2)
+    #assert(tracker.currentExercise == "ex3")
 
 
     tracker.resetProgress()
 
-    XCTAssertTrue(tracker.completedExercises.isEmpty)
-    XCTAssertTrue(tracker.currentExercise == nil)
+    #assert(tracker.completedExercises.isEmpty)
+    #assert(tracker.currentExercise == nil)
   }
 }

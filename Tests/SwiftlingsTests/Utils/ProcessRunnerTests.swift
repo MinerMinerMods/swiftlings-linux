@@ -1,31 +1,32 @@
-import XCTest
-import Foundation
+import Testing
+import CoreFoundation // Limited
 @testable import Swiftlings
 
-final class ProcessRunnerTests: XCTestCase {
-  func testProcessResultProperties() {
+@available(macOS,10_15)
+@Suite struct ProcessRunnerTests {
+  @Test func ProcessResultProperties() {
     let successResult = ProcessResult(
       exitCode: 0,
       stdout: "Success output",
       stderr: ""
     )
-    XCTAssertTrue(successResult.isSuccess == true)
-    XCTAssertTrue(successResult.exitCode == 0)
-    XCTAssertTrue(successResult.stdout == "Success output")
-    XCTAssertTrue(successResult.stderr.isEmpty)
+    #assert(successResult.isSuccess == true)
+    #assert(successResult.exitCode == 0)
+    #assert(successResult.stdout == "Success output")
+    #assert(successResult.stderr.isEmpty)
 
     let failureResult = ProcessResult(
       exitCode: 1,
       stdout: "",
       stderr: "Error occurred"
     )
-    XCTAssertTrue(failureResult.isSuccess == false)
-    XCTAssertTrue(failureResult.exitCode == 1)
-    XCTAssertTrue(failureResult.stdout.isEmpty)
-    XCTAssertTrue(failureResult.stderr == "Error occurred")
+    #assert(failureResult.isSuccess == false)
+    #assert(failureResult.exitCode == 1)
+    #assert(failureResult.stdout.isEmpty)
+    #assert(failureResult.stderr == "Error occurred")
   }
 
-  func testProcessRunnerEcho() throws {
+  @Test func ProcessRunnerEcho() throws {
     let runner = ProcessRunner()
     let result = try runner.run(
       executable: "/bin/echo",
@@ -33,13 +34,13 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: nil
     )
 
-    XCTAssertTrue(result.isSuccess)
-    XCTAssertTrue(result.exitCode == 0)
-    XCTAssertTrue(result.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "Hello, World!")
-    XCTAssertTrue(result.stderr.isEmpty)
+    #assert(result.isSuccess)
+    #assert(result.exitCode == 0)
+    #assert(result.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "Hello, World!")
+    #assert(result.stderr.isEmpty)
   }
 
-  func testProcessRunnerWithDirectory() throws {
+  @Test func ProcessRunnerWithDirectory() throws {
     let runner = ProcessRunner()
     let tempDir = FileManager.default.temporaryDirectory
 
@@ -49,14 +50,14 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: tempDir
     )
 
-    XCTAssertTrue(result.isSuccess)
+    #assert(result.isSuccess)
 
     let outputPath = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
     let expectedPath = tempDir.path
-    XCTAssertTrue(outputPath.hasSuffix(expectedPath.split(separator: "/").suffix(3).joined(separator: "/")) || outputPath == expectedPath)
+    #assert(outputPath.hasSuffix(expectedPath.split(separator: "/").suffix(3).joined(separator: "/")) || outputPath == expectedPath)
   }
 
-  func testProcessRunnerFailure() throws {
+  @Test func ProcessRunnerFailure() throws {
     let runner = ProcessRunner()
     let result = try runner.run(
       executable: "/bin/ls",
@@ -64,12 +65,12 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: nil
     )
 
-    XCTAssertTrue(!result.isSuccess)
-    XCTAssertTrue(result.exitCode != 0)
-    XCTAssertTrue(!result.stderr.isEmpty)
+    #assert(!result.isSuccess)
+    #assert(result.exitCode != 0)
+    #assert(!result.stderr.isEmpty)
   }
 
-  func testProcessRunnerSwift() throws {
+  @Test func ProcessRunnerSwift() throws {
     let runner = ProcessRunner()
     let result = try runner.run(
       executable: Configuration.Executables.swiftc,
@@ -77,11 +78,11 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: nil
     )
 
-    XCTAssertTrue(result.isSuccess)
-    XCTAssertTrue(result.stdout.contains("Swift") || result.stderr.contains("Swift"))
+    #assert(result.isSuccess)
+    #assert(result.stdout.contains("Swift") || result.stderr.contains("Swift"))
   }
 
-  func testMockProcessRunner() throws {
+  @Test func `Validate MockProcessRunner`() throws {
     let mock = MockProcessRunner()
 
 
@@ -97,9 +98,9 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: nil
     )
 
-    XCTAssertTrue(result1.exitCode == 0)
-    XCTAssertTrue(result1.stdout == "First result")
-    XCTAssertTrue(result1.stderr.isEmpty)
+    #assert(result1.exitCode == 0)
+    #assert(result1.stdout == "First result")
+    #assert(result1.stderr.isEmpty)
 
 
     let result2 = try mock.run(
@@ -108,21 +109,21 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: URL(fileURLWithPath: "/tmp")
     )
 
-    XCTAssertTrue(result2.exitCode == 1)
-    XCTAssertTrue(result2.stdout.isEmpty)
-    XCTAssertTrue(result2.stderr == "Second error")
+    #assert(result2.exitCode == 1)
+    #assert(result2.stdout.isEmpty)
+    #assert(result2.stderr == "Second error")
 
 
-    XCTAssertTrue(mock.capturedCalls.count == 2)
-    XCTAssertTrue(mock.capturedCalls[0].executable == "/bin/test")
-    XCTAssertTrue(mock.capturedCalls[0].arguments == ["arg1", "arg2"])
-    XCTAssertTrue(mock.capturedCalls[0].directory == nil)
-    XCTAssertTrue(mock.capturedCalls[1].executable == "/bin/test2")
-    XCTAssertTrue(mock.capturedCalls[1].arguments == ["arg3"])
-    XCTAssertTrue(mock.capturedCalls[1].directory?.path == "/tmp")
+    #assert(mock.capturedCalls.count == 2)
+    #assert(mock.capturedCalls[0].executable == "/bin/test")
+    #assert(mock.capturedCalls[0].arguments == ["arg1", "arg2"])
+    #assert(mock.capturedCalls[0].directory == nil)
+    #assert(mock.capturedCalls[1].executable == "/bin/test2")
+    #assert(mock.capturedCalls[1].arguments == ["arg3"])
+    #assert(mock.capturedCalls[1].directory?.path == "/tmp")
   }
 
-  func testMockProcessRunnerDefault() throws {
+  @Test func MockProcessRunnerDefault() throws {
     let mock = MockProcessRunner()
 
     let result = try mock.run(
@@ -131,29 +132,29 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: nil
     )
 
-    XCTAssertTrue(result.exitCode == 0)
-    XCTAssertTrue(result.stdout.isEmpty)
-    XCTAssertTrue(result.stderr.isEmpty)
+    #assert(result.exitCode == 0)
+    #assert(result.stdout.isEmpty)
+    #assert(result.stderr.isEmpty)
   }
 
-  func testMockProcessRunnerReset() throws {
+  @Test func `MockProcessRunner Resettable`() throws {
     let mock = MockProcessRunner()
 
     mock.mockResults = [ProcessResult(exitCode: 42, stdout: "Test", stderr: "")]
 
     _ = try mock.run(executable: "/bin/test", arguments: [], currentDirectory: nil)
-    XCTAssertTrue(mock.capturedCalls.count == 1)
+    #assert(mock.capturedCalls.count == 1)
 
     mock.reset()
 
-    XCTAssertTrue(mock.capturedCalls.isEmpty)
+    #assert(mock.capturedCalls.isEmpty)
 
 
     let result = try mock.run(executable: "/bin/test", arguments: [], currentDirectory: nil)
-    XCTAssertTrue(result.exitCode == 42)
+    #assert(result.exitCode == 42)
   }
 
-  func testProcessRunnerMultipleArguments() throws {
+  @Test func `ProcessRunner supports multiple arguments`() throws {
     let runner = ProcessRunner()
     let result = try runner.run(
       executable: "/bin/echo",
@@ -161,7 +162,7 @@ final class ProcessRunnerTests: XCTestCase {
       currentDirectory: nil
     )
 
-    XCTAssertTrue(result.isSuccess)
-    XCTAssertTrue(result.stdout == "arg1 arg2 arg3")
+    #assert(result.isSuccess)
+    #assert(result.stdout == "arg1 arg2 arg3")
   }
 }
